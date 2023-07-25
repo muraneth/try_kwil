@@ -1,23 +1,46 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState, useEffect, useCallback } from "react";
+import "./App.css";
+import { KwilClient } from "./KwilClient";
+
+const client = new KwilClient();
 
 function App() {
+  const [greetings, setGreetings] = useState([]);
+  const [greet, setGreet] = useState();
+  function fetchData() {
+    client
+      .readGreetings()
+      .then((r) => {
+        console.log(r.data);
+        setGreetings(r.data.body);
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+  }
+  useEffect(() => {
+    fetchData();
+  }, []);
+  function getRandomInt(max) {
+    return Math.floor(Math.random() * max);
+  }
+  const addGreeting = useCallback(async (greeting) => {
+    await client.addGreeting(getRandomInt(1000000), greeting);
+    fetchData();
+  }, []);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <h1>Hello kwil</h1>
+      {greetings.length > 0 &&
+        greetings.map((el) => <li key={el.id}>{el.message}</li>)}
+      <div>
+        <input
+          placeholder="addGreeting area"
+          onChange={(e) => setGreet(e.target.value)}
+        />
+        <button onClick={() => addGreeting(greet)}>insert</button>
+      </div>
     </div>
   );
 }
